@@ -1,7 +1,6 @@
-import pandas as pd
-import streamlit as st
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+iimport streamlit as st
+
+from recommendation_engine import movies, recommend_movies
 
 # ==========================================
 # Page Configuration
@@ -36,60 +35,6 @@ Built using:
 st.sidebar.write("Dataset: MovieLens")
 
 # ==========================================
-# Load Dataset
-# ==========================================
-
-movies = pd.read_csv("data/movies.csv")
-
-# ==========================================
-# Data Preprocessing
-# ==========================================
-
-movies['genres'] = movies['genres'].str.replace('|', ' ', regex=False)
-
-# ==========================================
-# Feature Extraction
-# ==========================================
-
-tfidf = TfidfVectorizer()
-
-genre_matrix = tfidf.fit_transform(movies['genres'])
-
-# ==========================================
-# Similarity Matrix
-# ==========================================
-
-similarity = cosine_similarity(genre_matrix)
-
-# ==========================================
-# Recommendation Function
-# ==========================================
-
-def recommend(movie_name):
-
-    movie_index = movies[movies['title'] == movie_name].index[0]
-
-    distances = similarity[movie_index]
-
-    movie_list = sorted(
-        list(enumerate(distances)),
-        reverse=True,
-        key=lambda x: x[1]
-    )[1:6]
-
-    recommendations = []
-
-    for movie in movie_list:
-
-        recommendations.append({
-            "title": movies.iloc[movie[0]].title,
-            "genre": movies.iloc[movie[0]].genres,
-            "score": round(movie[1] * 100, 2)
-        })
-
-    return recommendations
-
-# ==========================================
 # Main UI
 # ==========================================
 
@@ -97,7 +42,7 @@ st.title("🎬 Movie Recommendation System")
 
 st.markdown("""
 Discover movies similar to your favorites using
-TF-IDF, cosine similarity, and content-based filtering.
+TF-IDF, movie genres, user tags, and content-based filtering.
 """)
 
 # ==========================================
@@ -142,7 +87,7 @@ with col2:
 
 if st.button("🎬 Recommend"):
 
-    recommendations = recommend(movie_name)
+    recommendations = recommend_movies(movie_name)
 
     st.subheader("Recommended Movies")
 
@@ -150,11 +95,13 @@ if st.button("🎬 Recommend"):
 
         st.write(f"### {i}. {movie['title']}")
 
-        st.caption(movie['genre'])
+        st.caption(movie["genre"])
 
-        st.progress(movie['score'] / 100)
+        score = movie["similarity"]
 
-        st.write(f"Similarity Score: {movie['score']}%")
+        st.progress(score)
+
+        st.write(f"Similarity Score: {score:.3f}")
 
         st.write("")
 
