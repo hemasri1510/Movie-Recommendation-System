@@ -1,6 +1,6 @@
 import pandas as pd
 import streamlit as st
-from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ==========================================
@@ -28,8 +28,9 @@ Built using:
 - Python
 - Pandas
 - Scikit-Learn
-- Streamlit
+- TF-IDF
 - Cosine Similarity
+- Streamlit
 """)
 
 st.sidebar.write("Dataset: MovieLens")
@@ -50,9 +51,9 @@ movies['genres'] = movies['genres'].str.replace('|', ' ', regex=False)
 # Feature Extraction
 # ==========================================
 
-cv = CountVectorizer()
+tfidf = TfidfVectorizer()
 
-genre_matrix = cv.fit_transform(movies['genres'])
+genre_matrix = tfidf.fit_transform(movies['genres'])
 
 # ==========================================
 # Similarity Matrix
@@ -96,7 +97,7 @@ st.title("🎬 Movie Recommendation System")
 
 st.markdown("""
 Discover movies similar to your favorites using
-Machine Learning and Content-Based Filtering.
+TF-IDF, cosine similarity, and content-based filtering.
 """)
 
 # ==========================================
@@ -113,7 +114,7 @@ with stat2:
               movies['genres'].nunique())
 
 with stat3:
-    st.metric("Algorithm", "Cosine Similarity")
+    st.metric("Model", "TF-IDF + Cosine")
 
 st.divider()
 
