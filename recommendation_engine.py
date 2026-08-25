@@ -44,3 +44,21 @@ movies["tag"] = movies["tag"].fillna("")
 movies["content"] = (
     movies["genres"] + " " + movies["tag"]
 )
+
+
+# ==========================================
+# TF-IDF Feature Extraction
+# ==========================================
+
+tfidf = TfidfVectorizer(
+    stop_words="english"
+)
+
+tfidf_matrix = tfidf.fit_transform(movies["content"])
+
+
+# ==========================================
+# Cosine Similarity
+# ==========================================
+
+similarity_matrix = cosine_similarity(tfidf_matrix)
