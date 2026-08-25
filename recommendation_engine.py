@@ -17,32 +17,25 @@ tags = pd.read_csv("data/tags.csv")
 # ==========================================
 
 movies["genres"] = movies["genres"].fillna("")
-movies["genres"] = movies["genres"].str.replace("|", " ", regex=False)
-
-
-# ==========================================
-# Prepare Tags
-# ==========================================
-
 tags["tag"] = tags["tag"].fillna("")
 
-movie_tags = (
-    tags.groupby("movieId")["tag"]
-    .apply(lambda x: " ".join(x))
-    .reset_index()
-)
+# Combine all user tags for each movie
+movie_tags = tags.groupby("movieId")["tag"].apply(
+    lambda x: " ".join(x)
+).reset_index()
 
+# Merge tags with movie data
 movies = movies.merge(movie_tags, on="movieId", how="left")
 
 movies["tag"] = movies["tag"].fillna("")
 
-
-# ==========================================
-# Create Content Features
-# ==========================================
-
-movies["content"] = (
-    movies["genres"] + " " + movies["tag"]
+# Combine title, genres and tags
+movies["features"] = (
+    movies["title"].str.replace(r"\(\d{4}\)", "", regex=True)
+    + " "
+    + movies["genres"].str.replace("|", " ", regex=False)
+    + " "
+    + movies["tag"]
 )
 
 
@@ -54,7 +47,7 @@ tfidf = TfidfVectorizer(
     stop_words="english"
 )
 
-tfidf_matrix = tfidf.fit_transform(movies["content"])
+tfidf_matrix = tfidf.fit_transform(movies["features"])
 
 
 # ==========================================
@@ -62,13 +55,11 @@ tfidf_matrix = tfidf.fit_transform(movies["content"])
 # ==========================================
 
 similarity_matrix = cosine_similarity(tfidf_matrix)
-
-
 # ==========================================
 # Recommendation Function
 # ==========================================
 
-def recommend_movies(movie_name, top_n=5):
+def recommend_movies(movie_name, top_n=10):
 
     movie_index = movies[
         movies["title"] == movie_name
