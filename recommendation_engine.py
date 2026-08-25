@@ -11,31 +11,51 @@ movies = pd.read_csv("data/movies.csv")
 ratings = pd.read_csv("data/ratings.csv")
 tags = pd.read_csv("data/tags.csv")
 
+# Calculate average rating for each movie
+movie_ratings = ratings.groupby("movieId")["rating"].mean().reset_index()
+
+movie_ratings.rename(
+    columns={"rating": "avg_rating"},
+    inplace=True
+)
+
+movies = movies.merge(movie_ratings, on="movieId", how="left")
+
+movies["avg_rating"] = movies["avg_rating"].fillna(
+    movies["avg_rating"].mean()
+)
 
 # ==========================================
 # Prepare Movie Data
 # ==========================================
 
 movies["genres"] = movies["genres"].fillna("")
+movies["genres"] = movies["genres"].str.replace("|", " ", regex=False)
+
+
+# ==========================================
+# Prepare Tags
+# ==========================================
+
 tags["tag"] = tags["tag"].fillna("")
 
-# Combine all user tags for each movie
-movie_tags = tags.groupby("movieId")["tag"].apply(
-    lambda x: " ".join(x)
-).reset_index()
+movie_tags = (
+    tags.groupby("movieId")["tag"]
+    .apply(lambda x: " ".join(x))
+    .reset_index()
+)
 
-# Merge tags with movie data
 movies = movies.merge(movie_tags, on="movieId", how="left")
 
 movies["tag"] = movies["tag"].fillna("")
 
-# Combine title, genres and tags
-movies["features"] = (
-    movies["title"].str.replace(r"\(\d{4}\)", "", regex=True)
-    + " "
-    + movies["genres"].str.replace("|", " ", regex=False)
-    + " "
-    + movies["tag"]
+
+# ==========================================
+# Create Content Features
+# ==========================================
+
+movies["content"] = (
+    movies["genres"] + " " + movies["tag"]
 )
 
 
@@ -47,7 +67,7 @@ tfidf = TfidfVectorizer(
     stop_words="english"
 )
 
-tfidf_matrix = tfidf.fit_transform(movies["features"])
+tfidf_matrix = tfidf.fit_transform(movies["content"])
 
 
 # ==========================================
@@ -55,11 +75,13 @@ tfidf_matrix = tfidf.fit_transform(movies["features"])
 # ==========================================
 
 similarity_matrix = cosine_similarity(tfidf_matrix)
+
+
 # ==========================================
 # Recommendation Function
 # ==========================================
 
-def recommend_movies(movie_name, top_n=10):
+def recommend_movies(movie_name, top_n=5):
 
     movie_index = movies[
         movies["title"] == movie_name
