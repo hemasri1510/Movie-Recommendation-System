@@ -1,4 +1,4 @@
-iimport streamlit as st
+import streamlit as st
 
 from recommendation_engine import movies, recommend_movies
 
