@@ -87,7 +87,7 @@ with col2:
 
 if st.button("🎬 Recommend"):
 
-    recommendations = recommend_movies(movie_name)
+    recommendations = recommend_movies(movie_name, top_n=10)
 
     st.subheader("Recommended Movies")
 
