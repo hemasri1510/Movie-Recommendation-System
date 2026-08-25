@@ -62,3 +62,34 @@ tfidf_matrix = tfidf.fit_transform(movies["content"])
 # ==========================================
 
 similarity_matrix = cosine_similarity(tfidf_matrix)
+
+
+# ==========================================
+# Recommendation Function
+# ==========================================
+
+def recommend_movies(movie_name, top_n=5):
+
+    movie_index = movies[
+        movies["title"] == movie_name
+    ].index[0]
+
+    distances = similarity_matrix[movie_index]
+
+    movie_indices = sorted(
+        list(enumerate(distances)),
+        reverse=True,
+        key=lambda x: x[1]
+    )[1:top_n + 1]
+
+    recommendations = []
+
+    for index, score in movie_indices:
+
+        recommendations.append({
+            "title": movies.iloc[index]["title"],
+            "genre": movies.iloc[index]["genres"],
+            "similarity": round(score, 3)
+        })
+
+    return recommendations
